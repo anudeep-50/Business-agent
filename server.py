@@ -1,5 +1,6 @@
 from flask import Flask
-import bot  # this will start your Telegram bot
+import threading
+import bot  # your bot.py
 
 app = Flask(__name__)
 
@@ -8,4 +9,6 @@ def home():
     return "Telegram Business Agent is running!"
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    # Start the bot in a background thread
+    threading.Thread(target=bot.app.run_polling, daemon=True).start()
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
