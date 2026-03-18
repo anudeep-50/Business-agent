@@ -3,7 +3,7 @@ from typing import TypedDict, Literal
 from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI
 from langchain_community.tools.tavily_search import TavilySearchResults
-from personas import AXIOM_PROMPT, VECTOR_PROMPT, CIPHER_PROMPT, PROBE_PROMPT
+from personas import AXIOM_SYSTEM, VECTOR_SYSTEM, CIPHER_SYSTEM, PROBE_SYSTEM
 from database import insert, load_full_context
 
 # State definition
@@ -27,17 +27,17 @@ def probe_node(state: FounderState):
 
 def axiom_node(state: FounderState):
     context = load_full_context()
-    prompt = AXIOM_PROMPT + f"\nContext: {context}\nProbe Data: {state['probe_data']}"
+    prompt = AXIOM_SYSTEM + f"\nContext: {context}\nProbe Data: {state['probe_data']}"
     resp = llm.invoke(prompt)
     return {**state, "axiom_output": resp.content}
 
 def vector_node(state: FounderState):
-    prompt = VECTOR_PROMPT + f"\nAxiom said: {state['axiom_output']}\nContext: {state['context']}"
+    prompt = VECTOR_SYSTEM + f"\nAxiom said: {state['axiom_output']}\nContext: {state['context']}"
     resp = llm.invoke(prompt)
     return {**state, "vector_task": resp.content}
 
 def cipher_node(state: FounderState):
-    prompt = CIPHER_PROMPT + f"\nVector suggested: {state['vector_task']}\nContext: {state['context']}"
+    prompt = CIPHER_SYSTEM + f"\nVector suggested: {state['vector_task']}\nContext: {state['context']}"
     resp = llm.invoke(prompt)
     return {**state, "cipher_review": resp.content}
 
