@@ -15,11 +15,11 @@ async def main():
     await app.run_polling()
 
 if __name__ == "__main__":
-    # Run Flask in a background thread
+    # Run Flask in a background thread for Render health checks
     threading.Thread(
         target=lambda: flask_app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000))),
         daemon=True
     ).start()
 
-    # Run the bot
+    # Run the bot in the main asyncio loop
     asyncio.run(main())
