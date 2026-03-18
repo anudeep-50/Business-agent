@@ -1,5 +1,4 @@
 import os
-import asyncio
 import threading
 from flask import Flask
 from bot import app  # your ApplicationBuilder().token(...).build()
@@ -10,10 +9,6 @@ flask_app = Flask(__name__)
 def home():
     return "Telegram Business Agent is running!"
 
-async def main():
-    # Run the Telegram bot in the main asyncio loop
-    await app.run_polling()
-
 if __name__ == "__main__":
     # Run Flask in a background thread for Render health checks
     threading.Thread(
@@ -21,5 +16,5 @@ if __name__ == "__main__":
         daemon=True
     ).start()
 
-    # Run the bot in the main asyncio loop
-    asyncio.run(main())
+    # Run the Telegram bot (manages its own asyncio loop internally)
+    app.run_polling()
