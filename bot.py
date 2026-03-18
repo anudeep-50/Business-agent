@@ -44,4 +44,18 @@ async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     tables = ["company", "goals", "task_log", "lessons", "scratchpad"]
     output = ""
     for t in tables:
-        rows = fetch
+        rows = fetch_all(t)
+        output += f"{t}:\n{rows}\n\n"
+    await update.message.reply_text(output)
+
+# Register handlers
+app.add_handler(CommandHandler("deliberate", deliberate))
+app.add_handler(CommandHandler("memo", memo))
+app.add_handler(CommandHandler("research", research))
+app.add_handler(CommandHandler("problem", problem))
+app.add_handler(CommandHandler("lesson", lesson))
+app.add_handler(CommandHandler("status", status))
+
+if __name__ == "__main__":
+    print("Starting Telegram bot...")
+    app.run_polling()
