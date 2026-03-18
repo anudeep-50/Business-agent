@@ -1,15 +1,25 @@
 import os
-from flask import Flask
+import asyncio
 import threading
-import bot  # your bot.py
+from flask import Flask
+from bot import app  # your ApplicationBuilder().token(...).build()
 
-app = Flask(__name__)
+flask_app = Flask(__name__)
 
-@app.route("/")
+@flask_app.route("/")
 def home():
     return "Telegram Business Agent is running!"
 
+async def main():
+    # Run the Telegram bot in the main asyncio loop
+    await app.run_polling()
+
 if __name__ == "__main__":
-    # Start the bot in a background thread
-    threading.Thread(target=bot.app.run_polling, daemon=True).start()
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    # Run Flask in a background thread
+    threading.Thread(
+        target=lambda: flask_app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000))),
+        daemon=True
+    ).start()
+
+    # Run the bot
+    asyncio.run(main())
