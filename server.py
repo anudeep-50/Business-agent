@@ -1,5 +1,6 @@
 import os
 import threading
+import asyncio
 from flask import Flask
 from bot import app  # your ApplicationBuilder().token(...).build()
 
@@ -16,5 +17,9 @@ if __name__ == "__main__":
         daemon=True
     ).start()
 
-    # Run the Telegram bot (manages its own asyncio loop internally)
+    # Explicitly create and set an event loop (needed for Python 3.14+)
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    # Run the Telegram bot
     app.run_polling()
