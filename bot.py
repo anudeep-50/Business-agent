@@ -1,5 +1,5 @@
 import os
-from telegram import Update
+from telegram import Update, Bot
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 from orchestrator import run_deliberation, run_daily_memo, run_research, handle_pushback
 from database import fetch_all, insert
@@ -10,6 +10,20 @@ load_dotenv()
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
 app = ApplicationBuilder().token(TOKEN).build()
+
+# --- Handlers ---
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    message = (
+        "👋 Welcome to the Business Agent Bot!\n\n"
+        "Here are the available commands:\n"
+        "/deliberate - Run founders' deliberation\n"
+        "/memo - Get today's task or log a report\n"
+        "/research <topic> - Research a topic\n"
+        "/problem <text> - Log a pushback/issue\n"
+        "/lesson <text> - Store a lesson\n"
+        "/status - Show company status\n"
+    )
+    await update.message.reply_text(message)
 
 async def deliberate(update: Update, context: ContextTypes.DEFAULT_TYPE):
     result = run_deliberation()
@@ -48,7 +62,8 @@ async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
         output += f"{t}:\n{rows}\n\n"
     await update.message.reply_text(output)
 
-# Register handlers
+# --- Register handlers ---
+app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("deliberate", deliberate))
 app.add_handler(CommandHandler("memo", memo))
 app.add_handler(CommandHandler("research", research))
@@ -56,6 +71,26 @@ app.add_handler(CommandHandler("problem", problem))
 app.add_handler(CommandHandler("lesson", lesson))
 app.add_handler(CommandHandler("status", status))
 
+# --- Run bot ---
 if __name__ == "__main__":
     print("Starting Telegram bot...")
+
+    # Send a greeting when the bot boots up
+    bot = Bot(token=TOKEN)
+    chat_id = int(os.getenv("TELEGRAM_CHAT_ID", "0"))  # set your chat ID in Render env vars
+    if chat_id != 0:
+        bot.send_message(
+            chat_id=chat_id,
+            text=(
+                "👋 Hi, I’m online!\n"
+                "Choose an option:\n"
+                "/deliberate\n"
+                "/memo\n"
+                "/research <topic>\n"
+                "/problem <text>\n"
+                "/lesson <text>\n"
+                "/status"
+            )
+        )
+
     app.run_polling()
