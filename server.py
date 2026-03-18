@@ -1,8 +1,17 @@
 import os
 import threading
 import asyncio
+import logging
+import sys
 from flask import Flask
 from bot import app  # your ApplicationBuilder().token(...).build()
+
+# Global logging config (applies to all modules)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
 
 flask_app = Flask(__name__)
 
