@@ -71,7 +71,7 @@ app.add_handler(CommandHandler("problem", problem))
 app.add_handler(CommandHandler("lesson", lesson))
 app.add_handler(CommandHandler("status", status))
 
-# --- Run bot ---
+# --- Startup greeting only ---
 if __name__ == "__main__":
     print("Starting Telegram bot...")
 
@@ -93,4 +93,5 @@ if __name__ == "__main__":
             )
         )
 
-    app.run_polling()
+    # ⚠️ Removed app.run_polling() here
+    # Polling is now only started in server.py
