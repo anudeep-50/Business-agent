@@ -23,7 +23,7 @@ class FounderState(TypedDict):
 def get_llm():
     if os.getenv("GOOGLE_API_KEY"):
         logging.info("Using Gemini Pro as default")
-        return ChatGoogleGenerativeAI(model="gemini-2.5-pro", temperature=0.7)
+        return ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.7)
     elif os.getenv("OPENAI_API_KEY"):
         logging.info("Falling back to OpenAI GPT-4o")
         return ChatOpenAI(model="gpt-4o", temperature=0.7)
