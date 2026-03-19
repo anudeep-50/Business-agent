@@ -6,3 +6,6 @@ python-telegram-bot==21.5
 python-dotenv==1.0.1
 openai>=1.24.0,<2.0.0
 flask
+
+# Gemini integration
+langchain-google-genai

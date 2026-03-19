@@ -1,7 +1,9 @@
 import logging
+import os
 from typing import TypedDict, Literal
 from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.tools.tavily_search import TavilySearchResults
 from personas import AXIOM_SYSTEM, VECTOR_SYSTEM, CIPHER_SYSTEM, PROBE_SYSTEM
 from database import insert, load_full_context
@@ -16,7 +18,18 @@ class FounderState(TypedDict):
     final_memo: str
     loops: int
 
-llm = ChatOpenAI(model="gpt-4o", temperature=0.7)
+# LLM initialization: Gemini default, OpenAI fallback
+def get_llm():
+    if os.getenv("GOOGLE_API_KEY"):
+        logging.info("Using Gemini Pro as default")
+        return ChatGoogleGenerativeAI(model="gemini-2.5-pro", temperature=0.7)
+    elif os.getenv("OPENAI_API_KEY"):
+        logging.info("Falling back to OpenAI GPT-4o")
+        return ChatOpenAI(model="gpt-4o", temperature=0.7)
+    else:
+        raise RuntimeError("No valid LLM provider configured. Set GOOGLE_API_KEY or OPENAI_API_KEY.")
+
+llm = get_llm()
 tavily = TavilySearchResults(max_results=5)
 
 # Nodes with logging + error handling
