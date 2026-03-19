@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 from typing import TypedDict, Literal
 from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI
@@ -32,6 +33,24 @@ def get_llm():
 llm = get_llm()
 tavily = TavilySearchResults(max_results=5)
 
+# --- Safe invoke with retry/backoff ---
+def safe_invoke(prompt: str, retries: int = 3):
+    for attempt in range(retries):
+        try:
+            resp = llm.invoke(prompt)
+            return resp
+        except Exception as e:
+            msg = str(e)
+            if "429" in msg or "Too Many Requests" in msg:
+                wait = 2 ** attempt
+                logging.warning(f"Rate limit hit, retrying in {wait}s... (attempt {attempt+1})")
+                time.sleep(wait)
+            else:
+                logging.error(f"LLM error: {e}")
+                raise
+    logging.error("Max retries reached for LLM call")
+    raise RuntimeError("Gemini rate limit exceeded")
+
 # Nodes with logging + error handling
 def probe_node(state: FounderState):
     logging.info("PROBE node started")
@@ -49,7 +68,7 @@ def axiom_node(state: FounderState):
     try:
         context = load_full_context()
         prompt = AXIOM_SYSTEM + f"\nContext: {context}\nProbe Data: {state['probe_data']}"
-        resp = llm.invoke(prompt)
+        resp = safe_invoke(prompt)
         logging.info(f"AXIOM node finished. Preview: {resp.content[:60]}")
         return {**state, "axiom_output": resp.content}
     except Exception as e:
@@ -60,7 +79,7 @@ def vector_node(state: FounderState):
     logging.info("VECTOR node started")
     try:
         prompt = VECTOR_SYSTEM + f"\nAxiom said: {state['axiom_output']}\nContext: {state['context']}"
-        resp = llm.invoke(prompt)
+        resp = safe_invoke(prompt)
         logging.info(f"VECTOR node finished. Preview: {resp.content[:60]}")
         return {**state, "vector_task": resp.content}
     except Exception as e:
@@ -71,7 +90,7 @@ def cipher_node(state: FounderState):
     logging.info(f"CIPHER node started (loop {state.get('loops', 0)})")
     try:
         prompt = CIPHER_SYSTEM + f"\nVector suggested: {state['vector_task']}\nContext: {state['context']}"
-        resp = llm.invoke(prompt)
+        resp = safe_invoke(prompt)
         logging.info(f"CIPHER node finished. Preview: {resp.content[:60]}")
         return {**state, "cipher_review": resp.content}
     except Exception as e:
